@@ -1,0 +1,97 @@
+# --------------------------------------------
+# 📘 NLP CHATBOT USING NLTK
+# --------------------------------------------
+# This chatbot uses:
+# - Tokenization
+# - Lemmatization
+# - Similarity matching
+# to answer basic user queries.
+#
+# Author: Your Name
+# Project: CODTECH Internship – NLP Chatbot
+# --------------------------------------------
+
+import nltk
+import random
+import string
+from nltk.corpus import wordnet
+from nltk.stem import WordNetLemmatizer
+
+# Download required NLTK data
+nltk.download('punkt')
+nltk.download('wordnet')
+
+lemmatizer = WordNetLemmatizer()
+
+# --------------------------------------------
+# 1️⃣ KNOWLEDGE BASE (Bot Responses)
+# --------------------------------------------
+
+knowledge_base = {
+    "hello": "Hello! How can I help you today?",
+    "hi": "Hi there! Ask me anything.",
+    "what is nlp": "NLP stands for Natural Language Processing. It helps computers understand human language.",
+    "what is python": "Python is a high-level programming language used for AI, ML, web development, and more.",
+    "bye": "Goodbye! Have a nice day!",
+    "who are you": "I am an NLP chatbot created using Python and NLTK.",
+    "how are you": "I'm doing great! Thanks for asking."
+}
+
+# --------------------------------------------
+# 2️⃣ TEXT PREPROCESSING
+# --------------------------------------------
+
+def preprocess(text):
+    tokens = nltk.word_tokenize(text.lower())
+    tokens = [lemmatizer.lemmatize(word) for word in tokens if word not in string.punctuation]
+    return tokens
+
+# --------------------------------------------
+# 3️⃣ FIND BEST RESPONSE USING SIMILARITY
+# --------------------------------------------
+
+def get_similarity(word1, word2):
+    syn1 = wordnet.synsets(word1)
+    syn2 = wordnet.synsets(word2)
+
+    if syn1 and syn2:
+        return syn1[0].wup_similarity(syn2[0]) or 0
+    return 0
+
+def generate_response(user_input):
+    user_tokens = preprocess(user_input)
+    best_match = ""
+    highest_score = 0
+
+    for key in knowledge_base.keys():
+        key_tokens = preprocess(key)
+
+        score = 0
+        for ut in user_tokens:
+            for kt in key_tokens:
+                score += get_similarity(ut, kt)
+
+        if score > highest_score:
+            highest_score = score
+            best_match = key
+
+    if highest_score == 0:
+        return "Sorry, I didn't understand that. Please try again."
+
+    return knowledge_base[best_match]
+
+# --------------------------------------------
+# 4️⃣ MAIN CHAT LOOP
+# --------------------------------------------
+
+print("🤖 Chatbot: Hello! I am your NLP chatbot. Type 'bye' to exit.\n")
+
+while True:
+    user_input = input("You: ")
+
+    if user_input.lower() in ["bye", "exit"]:
+        print("🤖 Chatbot: Goodbye! Have a great day!")
+        break
+
+    response = generate_response(user_input)
+    print("🤖 Chatbot:", response)
